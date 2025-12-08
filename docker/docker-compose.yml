@@ -1,0 +1,40 @@
+# docker/docker-compose.yml
+version: "3.8"
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    container_name: es-kbo
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.1
+    container_name: kibana-kbo
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5602:5601"
+    depends_on:
+      - elasticsearch
+
+  flask:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: flask-kbo
+    environment:
+      - ES_HOSTS=http://elasticsearch:9200
+    ports:
+      - "9941:9941"
+    depends_on:
+      - elasticsearch
+
+volumes:
+  es_data:

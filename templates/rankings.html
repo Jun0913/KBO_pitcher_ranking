@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>KBO 투수 시즌별 성적 랭킹</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root {
+            --bg-main: #f5f7fb;
+            --card-bg: #ffffff;
+            --border-soft: #e1e4eb;
+            --text-main: #222;
+            --text-sub: #666;
+            --accent: #2563eb;
+            --accent-soft: #e3f0ff;
+            --metric-active-bg: #ffecec;
+            --metric-active-border: #f4b7b7;
+            --row-hover: #f9fbff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+            "Noto Sans KR", system-ui, sans-serif;
+            background: radial-gradient(circle at top left, #eef3ff, #f7fafc);
+            color: var(--text-main);
+        }
+
+        .page-container {
+            max-width: 1400px;
+            margin: 24px auto 40px;
+            padding: 0 20px;
+        }
+
+        .page-header { margin-bottom: 18px; }
+
+        .page-title {
+            margin: 0 0 4px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .page-subtitle {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .controls-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .controls-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+            align-items: flex-end;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .field-label { font-weight: 500; }
+
+        .field-select {
+            min-width: 120px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            font-size: 13px;
+            outline: none;
+            background: #f9fafb;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        .field-select:focus {
+            border-color: var(--accent);
+            background: #ffffff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+
+        .search-button {
+            padding: 7px 18px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+        }
+
+        .search-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+        }
+
+        .search-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
+            opacity: 0.9;
+        }
+
+        .search-button span.icon { font-size: 12px; }
+
+        .table-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 10px 0 4px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .table-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 18px 8px;
+        }
+
+        .table-header-left {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .table-header-left strong { color: var(--accent); }
+
+        .table-nav-buttons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-button {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            background: #ffffff;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+            transition: background-color 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: #f3f4ff;
+            transform: translateY(-0.5px);
+            box-shadow: 0 3px 8px rgba(148, 163, 184, 0.35);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 6px 6px 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 900px;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f9fafb;
+            border-bottom: 1px solid var(--border-soft);
+            padding: 8px 6px;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        tbody td {
+            padding: 7px 6px;
+            border-top: 1px solid rgba(226, 232, 240, 0.7);
+        }
+
+        tbody tr:nth-child(even) { background-color: #fdfdff; }
+        tbody tr:hover { background-color: var(--row-hover); }
+
+        .sort-indicator {
+            margin-left: 4px;
+            font-size: 10px;
+            color: var(--accent);
+        }
+
+        .group-1 { }
+        .group-2 { display: none; }
+
+        .active-metric { background-color: var(--metric-active-bg) !important; }
+
+        thead .active-metric {
+            border-bottom: 2px solid var(--metric-active-border);
+            color: #b91c1c;
+        }
+
+        .metric-label-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .metric-label-pill span.bullet {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #1d4ed8;
+        }
+
+        /* 🔹 정렬용 공통 클래스 */
+        .col-text {
+            text-align: left;
+        }
+
+        .col-num {
+            text-align: right;
+            font-variant-numeric: tabular-nums; /* 숫자 폭 고정 → 세로로 예쁘게 정렬 */
+        }
+
+        @media (max-width: 768px) {
+            .controls-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .field-select {
+                width: 100%;
+            }
+            .search-button {
+                width: 100%;
+                justify-content: center;
+            }
+            .page-title {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <header class="page-header">
+        <h1 class="page-title">KBO 투수 시즌별 성적 랭킹</h1>
+        <p class="page-subtitle">시즌 · 팀 · 지표를 선택해서 상위 20명의 랭킹을 확인할 수 있습니다.</p>
+    </header>
+
+    <section class="controls-card">
+        <form class="controls-form" method="get" action="{{ url_for('rankings') }}">
+            <div class="field-group">
+                <span class="field-label">시즌</span>
+                <select class="field-select" name="season">
+                    <option value="2024" {% if season == 2024 %}selected{% endif %}>2024 시즌</option>
+                    <option value="2025" {% if season == 2025 %}selected{% endif %}>2025 시즌</option>
+                </select>
+            </div>
+
+            <div class="field-group">
+                <span class="field-label">팀</span>
+                <select class="field-select" name="team">
+                    {% for value, label in teams_list %}
+                        <option value="{{ value }}" {% if team == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field-group">
+                <span class="field-label">기본 지표</span>
+                <select class="field-select" name="metric">
+                    {% for value, label in metrics_list %}
+                        <option value="{{ value }}" {% if metric == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button class="search-button" type="submit">
+                <span class="icon">🔍</span>
+                <span>검색</span>
+            </button>
+        </form>
+    </section>
+
+    <section class="table-card">
+        <div class="table-header-bar">
+            <div class="table-header-left">
+                <span class="metric-label-pill">
+                    <span class="bullet"></span>
+                    현재 정렬 지표:
+                    <strong style="margin-left:4px;">{{ metric|upper }}</strong>
+                </span>
+            </div>
+            <div class="table-nav-buttons">
+                <button class="nav-button" id="prevCols" disabled>&lt;</button>
+                <button class="nav-button" id="nextCols">&gt;</button>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="ranking-table">
+                <thead>
+                <tr>
+                    <th class="col-num" data-key="rank" title="순위">순위</th>
+                    <th class="col-text" data-key="player_name" title="선수 이름">선수명</th>
+                    <th class="col-text" data-key="team" title="소속 팀">팀명</th>
+
+                    <!-- 그룹 1 -->
+                    <th class="group-1 col-num {% if metric == 'era' %}active-metric{% endif %}"  data-key="era"  title="평균자책점">ERA</th>
+                    <th class="group-1 col-num {% if metric == 'g' %}active-metric{% endif %}"    data-key="g"    title="등판 경기 수">G</th>
+                    <th class="group-1 col-num {% if metric == 'w' %}active-metric{% endif %}"    data-key="w"    title="승리 수">W</th>
+                    <th class="group-1 col-num {% if metric == 'l' %}active-metric{% endif %}"    data-key="l"    title="패배 수">L</th>
+                    <th class="group-1 col-num {% if metric == 'sv' %}active-metric{% endif %}"   data-key="sv"   title="세이브 수">SV</th>
+                    <th class="group-1 col-num {% if metric == 'hld' %}active-metric{% endif %}"  data-key="hld"  title="홀드 수">HLD</th>
+                    <th class="group-1 col-num {% if metric == 'wpct' %}active-metric{% endif %}" data-key="wpct" title="승률">WPCT</th>
+                    <th class="group-1 col-num {% if metric == 'ip' %}active-metric{% endif %}"   data-key="ip"   title="이닝 수">IP</th>
+                    <th class="group-1 col-num {% if metric == 'h' %}active-metric{% endif %}"    data-key="h"    title="피안타 수">H</th>
+                    <th class="group-1 col-num {% if metric == 'hr' %}active-metric{% endif %}"   data-key="hr"   title="피홈런 수">HR</th>
+                    <th class="group-1 col-num {% if metric == 'bb' %}active-metric{% endif %}"   data-key="bb"   title="볼넷 수">BB</th>
+                    <th class="group-1 col-num {% if metric == 'so' %}active-metric{% endif %}"   data-key="so"   title="탈삼진 수">SO</th>
+                    <th class="group-1 col-num {% if metric == 'r' %}active-metric{% endif %}"    data-key="r"    title="실점">R</th>
+                    <th class="group-1 col-num {% if metric == 'er' %}active-metric{% endif %}"   data-key="er"   title="자책점">ER</th>
+                    <th class="group-1 col-num {% if metric == 'whip' %}active-metric{% endif %}" data-key="whip" title="이닝당 출루 허용 (WHIP)">WHIP</th>
+
+                    <!-- 그룹 2 -->
+                    <th class="group-2 col-num {% if metric == 'hbp' %}active-metric{% endif %}" data-key="hbp" title="사구">HBP</th>
+                    <th class="group-2 col-num {% if metric == 'cg' %}active-metric{% endif %}"  data-key="cg"  title="완투">CG</th>
+                    <th class="group-2 col-num {% if metric == 'sho' %}active-metric{% endif %}" data-key="sho" title="완봉">SHO</th>
+                    <th class="group-2 col-num {% if metric == 'qs' %}active-metric{% endif %}"  data-key="qs"  title="퀄리티스타트">QS</th>
+                    <th class="group-2 col-num {% if metric == 'bsv' %}active-metric{% endif %}" data-key="bsv" title="블론 세이브">BSV</th>
+                    <th class="group-2 col-num {% if metric == 'tbf' %}active-metric{% endif %}" data-key="tbf" title="상대한 타자 수">TBF</th>
+                    <th class="group-2 col-num {% if metric == 'np' %}active-metric{% endif %}"  data-key="np"  title="투구 수">NP</th>
+                    <th class="group-2 col-num {% if metric == 'avg' %}active-metric{% endif %}" data-key="avg" title="피안타율">AVG</th>
+                    <th class="group-2 col-num {% if metric == '2b' %}active-metric{% endif %}"  data-key="2b"  title="2루타 허용">2B</th>
+                    <th class="group-2 col-num {% if metric == '3b' %}active-metric{% endif %}"  data-key="3b"  title="3루타 허용">3B</th>
+                    <th class="group-2 col-num {% if metric == 'sac' %}active-metric{% endif %}" data-key="sac" title="희생 번트">SAC</th>
+                    <th class="group-2 col-num {% if metric == 'sf' %}active-metric{% endif %}"  data-key="sf"  title="희생 플라이">SF</th>
+                    <th class="group-2 col-num {% if metric == 'ibb' %}active-metric{% endif %}" data-key="ibb" title="고의4구">IBB</th>
+                    <th class="group-2 col-num {% if metric == 'wp' %}active-metric{% endif %}"  data-key="wp"  title="폭투">WP</th>
+                    <th class="group-2 col-num {% if metric == 'bk' %}active-metric{% endif %}"  data-key="bk"  title="보크">BK</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for p in pitchers %}
+                    <tr>
+                        <td class="col-num">{{ p.rank }}</td>
+                        <td class="col-text">{{ p.player_name }}</td>
+                        <td class="col-text">{{ p.team }}</td>
+
+                        <td class="group-1 col-num {% if metric == 'era' %}active-metric{% endif %}">{{ "%.2f"|format(p.era) if p.era is not none }}</td>
+                        <td class="group-1 col-num {% if metric == 'g' %}active-metric{% endif %}">{{ p.g }}</td>
+                        <td class="group-1 col-num {% if metric == 'w' %}active-metric{% endif %}">{{ p.w }}</td>
+                        <td class="group-1 col-num {% if metric == 'l' %}active-metric{% endif %}">{{ p.l }}</td>
+                        <td class="group-1 col-num {% if metric == 'sv' %}active-metric{% endif %}">{{ p.sv }}</td>
+                        <td class="group-1 col-num {% if metric == 'hld' %}active-metric{% endif %}">{{ p.hld }}</td>
+                        <td class="group-1 col-num {% if metric == 'wpct' %}active-metric{% endif %}">{{ "%.3f"|format(p.wpct) if p.wpct is not none }}</td>
+                        <td class="group-1 col-num {% if metric == 'ip' %}active-metric{% endif %}">{{ "%.1f"|format(p.ip) if p.ip is not none }}</td>
+                        <td class="group-1 col-num {% if metric == 'h' %}active-metric{% endif %}">{{ p.h }}</td>
+                        <td class="group-1 col-num {% if metric == 'hr' %}active-metric{% endif %}">{{ p.hr }}</td>
+                        <td class="group-1 col-num {% if metric == 'bb' %}active-metric{% endif %}">{{ p.bb }}</td>
+                        <td class="group-1 col-num {% if metric == 'so' %}active-metric{% endif %}">{{ p.so }}</td>
+                        <td class="group-1 col-num {% if metric == 'r' %}active-metric{% endif %}">{{ p.r }}</td>
+                        <td class="group-1 col-num {% if metric == 'er' %}active-metric{% endif %}">{{ p.er }}</td>
+                        <td class="group-1 col-num {% if metric == 'whip' %}active-metric{% endif %}">{{ "%.2f"|format(p.whip) if p.whip is not none }}</td>
+
+                        <td class="group-2 col-num {% if metric == 'hbp' %}active-metric{% endif %}">{{ p.hbp }}</td>
+                        <td class="group-2 col-num {% if metric == 'cg' %}active-metric{% endif %}">{{ p.cg }}</td>
+                        <td class="group-2 col-num {% if metric == 'sho' %}active-metric{% endif %}">{{ p.sho }}</td>
+                        <td class="group-2 col-num {% if metric == 'qs' %}active-metric{% endif %}">{{ p.qs }}</td>
+                        <td class="group-2 col-num {% if metric == 'bsv' %}active-metric{% endif %}">{{ p.bsv }}</td>
+                        <td class="group-2 col-num {% if metric == 'tbf' %}active-metric{% endif %}">{{ p.tbf }}</td>
+                        <td class="group-2 col-num {% if metric == 'np' %}active-metric{% endif %}">{{ p.np }}</td>
+                        <td class="group-2 col-num {% if metric == 'avg' %}active-metric{% endif %}">{{ "%.3f"|format(p.avg) if p.avg is not none }}</td>
+                        <td class="group-2 col-num {% if metric == '2b' %}active-metric{% endif %}">{{ p["2b"] if "2b" in p }}</td>
+                        <td class="group-2 col-num {% if metric == '3b' %}active-metric{% endif %}">{{ p["3b"] if "3b" in p }}</td>
+                        <td class="group-2 col-num {% if metric == 'sac' %}active-metric{% endif %}">{{ p.sac }}</td>
+                        <td class="group-2 col-num {% if metric == 'sf' %}active-metric{% endif %}">{{ p.sf }}</td>
+                        <td class="group-2 col-num {% if metric == 'ibb' %}active-metric{% endif %}">{{ p.ibb }}</td>
+                        <td class="group-2 col-num {% if metric == 'wp' %}active-metric{% endif %}">{{ p.wp }}</td>
+                        <td class="group-2 col-num {% if metric == 'bk' %}active-metric{% endif %}">{{ p.bk }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script>
+(function() {
+    const table = document.getElementById('ranking-table');
+    const headers = table.querySelectorAll('th');
+    const prevBtn = document.getElementById('prevCols');
+    const nextBtn = document.getElementById('nextCols');
+
+    const currentMetric = "{{ metric }}";
+    const currentDir = "{{ sort_dir }}";
+    const goodAscMetrics = ['era', 'whip', 'avg'];
+    const group2Metrics = ['hbp','cg','sho','qs','bsv','tbf','np','avg','2b','3b','sac','sf','ibb','wp','bk'];
+
+    let currentGroup = 1;
+
+    function showGroup(group) {
+        currentGroup = group;
+        const g1 = table.querySelectorAll('.group-1');
+        const g2 = table.querySelectorAll('.group-2');
+
+        if (group === 1) {
+            g1.forEach(el => el.style.display = 'table-cell');
+            g2.forEach(el => el.style.display = 'none');
+            prevBtn.disabled = true;
+            nextBtn.disabled = false;
+        } else {
+            g1.forEach(el => el.style.display = 'none');
+            g2.forEach(el => el.style.display = 'table-cell');
+            prevBtn.disabled = false;
+            nextBtn.disabled = true;
+        }
+    }
+
+    prevBtn.addEventListener('click', () => {
+        if (currentGroup === 2) showGroup(1);
+    });
+    nextBtn.addEventListener('click', () => {
+        if (currentGroup === 1) showGroup(2);
+    });
+
+    const initialGroup = group2Metrics.includes(currentMetric) ? 2 : 1;
+    showGroup(initialGroup);
+
+    // 현재 정렬 중인 지표에 ▲/▼ 표시
+    headers.forEach(h => {
+        const key = h.getAttribute('data-key');
+        if (key === currentMetric) {
+            const span = document.createElement('span');
+            span.className = 'sort-indicator';
+            span.textContent = currentDir === 'asc' ? '▲' : '▼';
+            h.appendChild(span);
+        }
+    });
+
+    // 헤더 클릭 → 서버로 /rankings 요청
+    headers.forEach(header => {
+        const key = header.getAttribute('data-key');
+        if (!key || ['rank', 'player_name', 'team'].includes(key)) return;
+
+        header.addEventListener('click', () => {
+            let nextDir;
+            if (key === currentMetric) {
+                nextDir = currentDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                nextDir = goodAscMetrics.includes(key) ? 'asc' : 'desc';
+            }
+
+            const baseUrl = "{{ url_for('rankings') }}";
+            const season = "{{ season }}";
+            const team = "{{ team }}";
+
+            const url = `${baseUrl}?season=${season}&team=${team}&metric=${key}&sort_dir=${nextDir}`;
+            window.location.href = url;
+        });
+    });
+})();
+</script>
+</body>
+</html>
