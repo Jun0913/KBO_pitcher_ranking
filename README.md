@@ -1,4 +1,3 @@
-	# KBO Pitcher Ranking  
 ### Flask + Elasticsearch 기반 KBO 투수 시즌별 랭킹 서비스
 
 KBO(한국 프로야구) 투수의 시즌별 성적 데이터를 **Elasticsearch**에 저장하고,  
@@ -88,9 +87,6 @@ kbo_pitcher_ranking/
 ├─ Dockerfile
 └─ docker-compose.yml
 
-yaml
-코드 복사
-
 ---
 
 ## 📦 Requirements
@@ -104,9 +100,6 @@ python-dotenv==1.0.1
 pandas==2.2.3
 openpyxl==3.1.5
 
-yaml
-코드 복사
-
 ---
 
 ## ⚙️ Environment Variables
@@ -116,10 +109,9 @@ yaml
 ```env
 ES_HOSTS=http://elasticsearch:9200
 ES_INDEX=kbo_pitcher_stats
+
 🚀 실행 방법 (Docker 권장)
 1️⃣ 컨테이너 실행
-bash
-코드 복사
 cd docker
 docker compose up -d --build
 2️⃣ 접속 정보
@@ -149,8 +141,6 @@ GET /
 GET /rankings
 쿼리 파라미터 예시:
 
-sql
-코드 복사
 /rankings?season=2025&team=all&metric=era&sort_dir=asc
 sort_dir 미지정 시 지표 특성에 따른 기본 방향 적용
 
