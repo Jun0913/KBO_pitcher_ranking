@@ -69,34 +69,41 @@ KBO(한국 프로야구) 투수의 시즌별 성적 데이터를 **Elasticsearch
 - Python ES Client: `elasticsearch-py` (low-level)
 
 ---
+
 ## 📁 프로젝트 구조
 
+```text
 kbo_pitcher_ranking/
 ├─ app.py
 ├─ config.py
 ├─ requirements.txt
 ├─ services/
-│ └─ es_service.py
+│  └─ es_service.py
 ├─ templates/
-│ └─ rankings.html
+│  └─ rankings.html
 ├─ static/
-│ ├─ css/
-│ └─ js/
+│  ├─ css/
+│  └─ js/
 └─ docker/
-├─ Dockerfile
-└─ docker-compose.yml
+   ├─ Dockerfile
+   └─ docker-compose.yml
+```
+
+
 ---
 
 ## 📦 Requirements
 
 `requirements.txt`
 
+```
 Flask==3.0.3
 elasticsearch==7.10.1
 gunicorn==21.2.0
 python-dotenv==1.0.1
 pandas==2.2.3
 openpyxl==3.1.5
+```
 
 ---
 
