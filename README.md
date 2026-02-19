@@ -109,13 +109,15 @@ openpyxl==3.1.5
 
 ## ⚙️ Environment Variables
 
-`.env`
-
-```env
+```
+.env
 ES_HOSTS=http://elasticsearch:9200
 ES_INDEX=kbo_pitcher_stats
+```
 
-🚀 실행 방법 (Docker 권장)
+
+## 🚀 실행 방법 (Docker 권장)
+```
 1️⃣ 컨테이너 실행
 cd docker
 docker compose up -d --build
@@ -125,8 +127,10 @@ Flask Web: http://localhost:9941
 Elasticsearch: http://localhost:9200
 
 Kibana: http://localhost:5602
+```
 
-📊 데이터 적재 (Excel → Elasticsearch)
+## 📊 데이터 적재 (Excel → Elasticsearch)
+```
 투수 성적 데이터는 엑셀 파일 KBO_pitcher.xlsx 를 사용합니다.
 
 엑셀 구조
@@ -136,8 +140,10 @@ Kibana: http://localhost:5602
 
 엑셀 데이터를 pandas + openpyxl로 읽어
 Elasticsearch 인덱스 kbo_pitcher_stats 에 적재합니다.
+```
 
-🔗 주요 라우트
+## 🔗 주요 라우트
+```
 GET /
 기본 랭킹 페이지
 
@@ -152,8 +158,10 @@ sort_dir 미지정 시 지표 특성에 따른 기본 방향 적용
 ERA / WHIP / AVG → 오름차순
 
 그 외 지표 → 내림차순
+```
 
-⚠️ 에러 처리
+## ⚠️ 에러 처리
+```
 Elasticsearch 연결 오류 발생 시
 
 서버 중단 없이 에러 메시지 UI 표시
@@ -161,8 +169,10 @@ Elasticsearch 연결 오류 발생 시
 조회 결과가 없는 경우
 
 “해당 조건에 맞는 데이터가 없습니다” 안내 메시지 표시
+```
 
-📈 확장 아이디어 (Roadmap)
+## 📈 확장 아이디어 (Roadmap)
+```
 JSON API 제공 (/api/rankings)
 
 선수명 검색 기능
@@ -172,3 +182,4 @@ Kibana 대시보드 기반 시즌/팀별 통계 시각화
 자주 사용되는 쿼리 캐싱
 
 랭킹/정렬 로직 단위 테스트 추가
+```
